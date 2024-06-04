@@ -1,0 +1,58 @@
+#Description: this connects with MySQL Workbench and has a login and product to insert data. It also hashes passwords and converts and image to binary data
+
+import pymysql
+import bcrypt
+
+#connects to the localhost of MySQL Workbench. Note: the password is fake, it's just a placeholder
+conn = pymysql.connect(host='localhost', user='root', password='JustAPassword', autocommit=True)
+
+#uses bcrypt to hash passwords
+def hashMyPassword(password):
+    salt = bcrypt.gensalt()
+    hashedPass = bcrypt.hashpw(password.encode('utf8'), salt)
+    return hashedPass
+
+#converts an image to binary
+def Convert2Binary(image):
+    with open(image, 'rb') as file:
+        binaryData = file.read()
+    return binaryData
+
+#inserts data to login
+def insertToLoginTable(cursor, username, password, name, email):
+    query = "INSERT INTO `login` (username, password, name, email) VALUES (%s, %s, %s, %s)"
+    if cursor and username and password and name and email:
+        hashedpassword = hashMyPassword(password)
+        cursor.execute(query, username, hashedpassword, name, email)
+    else:
+        print("There was an error with the input. Please try a correct input.")
+
+#inserts data for product
+def insertIntoProduct(cursor, name, price, image, quantity):
+    query = "INSERT INTO `product`  (product_name, price, product_image, quantity) VALUES (%s, %s, %s, %s)"
+    if cursor and name and price and image and quantity:
+        data = Convert2Binary(image)
+        cursor.execute(query, name, price, data, quantity)
+
+
+try:
+    with conn.cursor() as cursor:
+        query = "CREATE DATABASE IF NOT EXISTS A3"
+        cursor.execute(query)
+
+        conn.select_db('A3')
+
+        query = "CREATE TABLE IF NOT EXISTS `login`(`id` INT NOT NULL, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `name` TEXT NOT NULL, `email` TEXT NOT NULL, PRIMARY KEY (`id`))"
+        cursor.execute(query)
+
+        query = "CREATE TABLE IF NOT EXISTS `product`(`product_id` INT NOT NULL, `product_name` TEXT NOT NULL, `price` DECIMAL, `product_image` INT, `quantity` INT, PRIMARY KEY (`product_id`), FOREIGN KEY (`product_id`) REFERENCES `login`(`id`)) "
+        cursor.execute(query)
+
+        query = "CREATE TABLE IF NOT EXISTS `recipes`(`recipe_id` INT NOT NULL, `recipe_name` TEXT NOT NULL, `ingredients` TEXT NOT NULL, `yield` INT, `recipe_img` INT, PRIMARY KEY (`recipe_id`), FOREIGN KEY (`recipe_id`) REFERENCES `login`(`id`))"
+        cursor.execute(query)
+
+        query = "CREATE TABLE IF NOT EXISTS `shipping`(`shipping_id` INT NOT NULL, `address` TEXT NOT NULL, `warehouse_location` TEXT NOT NULL, PRIMARY KEY (`shipping_id`), FOREIGN KEY (`shipping_id`) REFERENCES `login`(`id`))"
+        cursor.execute(query)
+     
+finally:
+    conn.close()
