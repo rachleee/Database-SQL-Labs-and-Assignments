@@ -1,0 +1,54 @@
+#creating a table and inserting variables in it using python for SQL
+
+import pymysql
+
+host='localhost'
+
+username = 'root'
+
+#put in your actual password that is connected with MySQL Workbench
+password ="JustAPassword"
+
+#the name of the database
+dbName ='employees_db'
+
+#step2: connecting 
+conn = pymysql.connect(host=host, user=username, password=password)
+
+#step 3: creating a cursor
+cursor = conn.cursor()
+
+query = "DROP DATABASE " + dbName
+
+cursor.execute(query)
+
+#step 4: creating a query and execute it
+query = "CREATE DATABASE " + dbName
+
+cursor.execute(query)
+
+#connects to database
+conn.select_db(dbName)
+
+query = "CREATE TABLE employee(id INTEGER, name VARCHAR(255), age INTEGER, position VARCHAR (255), PRIMARY KEY (id))"
+
+cursor.execute(query)
+
+query = "INSERT INTO employee (id, name, age, position) VALUES (612394, 'Rachel', 100, 'Kitchen staff'), (164933, 'Oscar', 107, 'Student'), (179343, 'Dan', 101, 'Full time staff')"
+
+cursor.execute(query)
+
+query = "SELECT * FROM employee"
+
+cursor.execute(query)
+
+results = cursor.fetchall()
+
+for result in results:
+    print(result)
+
+
+#step 6 - close the connection
+
+conn.commit()
+conn.close()
